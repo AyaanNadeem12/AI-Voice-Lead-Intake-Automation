@@ -1,0 +1,392 @@
+{
+  "name": "Lead Qualifier - Home Services",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        32
+      ],
+      "id": "4dcd881a-1f26-4172-8632-39c6d79b48cf",
+      "name": "Webhook",
+      "webhookId": "[REDACTED]"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"nvidia/nemotron-3.5-lightning:free\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a dispatch assistant for a home services company. Given a caller's name, issue, and urgency rating, write ONE short sentence summarizing the lead for a technician, and independently rate urgency 1-5 based on the issue described. Respond with ONLY valid JSON in this exact format, no other text: {\\\"summary\\\": \\\"...\\\", \\\"urgency_check\\\": 1}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Caller: {{ $json.body.caller_name }}. Issue: {{ $json.body.issue_description }}. Reported urgency: {{ $json.body.urgency }}. Area: {{ $json.body.service_area }}.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        176,
+        32
+      ],
+      "id": "9588d85d-8438-4c0c-8d88-13f6a333e1da",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "[REDACTED]",
+          "name": "OpenRouter API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawContent = $input.first().json.choices[0].message.content;\n\n// Extract just the JSON object, ignoring any preamble/postamble text or markdown fences\nconst jsonMatch = rawContent.match(/\\{[\\s\\S]*\\}/);\nif (!jsonMatch) {\n  throw new Error('No JSON object found in LLM response: ' + rawContent);\n}\n\nconst parsed = JSON.parse(jsonMatch[0]);\n\nconst webhookData = $('Webhook').first().json.body;\n\nreturn [{\n  json: {\n    caller_name: webhookData.caller_name,\n    phone_number: webhookData.phone_number,\n    caller_email: webhookData.caller_email,\n    issue_description: webhookData.issue_description,\n    urgency: webhookData.urgency,\n    urgency_check: parsed.urgency_check,\n    preferred_callback_time: webhookData.preferred_callback_time,\n    service_area: webhookData.service_area,\n    ai_summary: parsed.summary,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        32
+      ],
+      "id": "7ac48750-f3f0-4c35-9b1a-62c5f135a22f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "your-google-sheet-id",
+          "mode": "list",
+          "cachedResultName": "Lead Intake - Home Services",
+          "cachedResultUrl": "your-google-sheet-url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "your-google-sheet-url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.timestamp }}",
+            "Caller Name": "={{ $json.caller_name }}",
+            "Phone Number": "={{ $json.phone_number }}",
+            "Issue Description": "={{ $json.issue_description }}",
+            "Reported Urgency": "={{ $json.urgency }}",
+            "AI Urgency Check": "={{ $json.urgency_check }}",
+            "Callback Time": "={{ $json.preferred_callback_time }}",
+            "Service Area": "={{ $json.service_area }}",
+            "AI Summary": "={{ $json.ai_summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caller Name",
+              "displayName": "Caller Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issue Description",
+              "displayName": "Issue Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reported Urgency",
+              "displayName": "Reported Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Urgency Check",
+              "displayName": "AI Urgency Check",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Callback Time",
+              "displayName": "Callback Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service Area",
+              "displayName": "Service Area",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Summary",
+              "displayName": "AI Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        32
+      ],
+      "id": "c179cb5e-a82a-4b49-b572-0cb4984f43d1",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "[REDACTED]",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "36e4f11a-3bef-4c19-a928-dd27277a6fc2",
+              "leftValue": "={{ $json['Reported Urgency'] }}",
+              "rightValue": 4,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        -80
+      ],
+      "id": "599339be-2cb4-4544-ab2c-20c38ae075a5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"onboarding@resend.dev\",\n  \"to\": \"your-email@example.com\",\n  \"subject\": \"Hot Lead: {{ $('Code in JavaScript').item.json.caller_name }} - {{ $('Code in JavaScript').item.json.service_area }}\",\n  \"text\": \"New urgent lead needs a callback ASAP.\\n\\nName: {{ $('Code in JavaScript').item.json.caller_name }}\\nPhone: {{ $('Code in JavaScript').item.json.phone_number }}\\nIssue: {{ $('Code in JavaScript').item.json.issue_description }}\\nPreferred callback: {{ $('Code in JavaScript').item.json.preferred_callback_time }}\\nArea: {{ $('Code in JavaScript').item.json.service_area }}\\n\\nAI Summary: {{ $('Code in JavaScript').item.json.ai_summary }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1248,
+        -96
+      ],
+      "id": "e4b4c01e-3ca6-44f5-ab7c-97ce600a6577",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "[REDACTED]",
+          "name": "Resend API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"onboarding@resend.dev\",\n  \"to\": \"your-email@example.com\",\n  \"subject\": \"We got your request!\",\n  \"text\": \"Hi {{ $('Code in JavaScript').item.json.caller_name }},\\n\\nThanks for calling! Someone from our team will reach out to you at {{ $('Code in JavaScript').item.json.preferred_callback_time }} regarding: {{ $('Code in JavaScript').item.json.issue_description }}.\\n\\nTalk soon!\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        928,
+        176
+      ],
+      "id": "f227b7c9-beb8-4e48-b270-b0725c7fbaea",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "[REDACTED]",
+          "name": "Resend API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "[REDACTED]",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "[REDACTED]",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "[REDACTED]"
+  },
+  "nodeGroups": [],
+  "id": "[REDACTED]",
+  "tags": []
+}
