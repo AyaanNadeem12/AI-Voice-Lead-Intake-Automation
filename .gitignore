@@ -1,0 +1,40 @@
+# Environment variables / secrets
+
+.env
+.env.*
+!.env.example
+
+# n8n local data
+
+.n8n/
+n8n_data/
+
+# Logs
+
+*.log
+logs/
+
+# OS files
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor files
+
+.vscode/
+.idea/
+
+# Python
+
+**pycache**/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Temporary files
+
+*.tmp
+*.temp
+*.bak
