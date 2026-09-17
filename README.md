@@ -195,8 +195,10 @@ ai-voice-lead-intake-automation/
 └── screenshots/
     ├── n8n-workflow.png
     ├── google-sheets.png
-    ├── hot-lead-email.png
-    └── customer-confirmation.png
+    ├── Hot-lead-email.png
+    ├── Customer-confirmation-email.png
+    ├── error-handler.png
+    └── retell-ai-workflow.png
 ```
 
 ## Purpose
