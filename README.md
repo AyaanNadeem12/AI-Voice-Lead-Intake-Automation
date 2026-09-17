@@ -144,11 +144,11 @@ The workflow was tested with both normal priority and high priority leads.
 
 ### Hot Lead Notification
 
-![Hot Lead Email](screenshots/hot-lead-email.png)
+![Hot Lead Email](screenshots/Hot-lead-email.png)
 
 ### Customer Confirmation
 
-![Customer Confirmation](screenshots/customer-confirmation-email.png)
+![Customer Confirmation](screenshots/Customer-confirmation-email.png)
 
 
 
