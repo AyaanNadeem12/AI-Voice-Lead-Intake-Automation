@@ -138,6 +138,10 @@ The workflow was tested with both normal priority and high priority leads.
 
 ![Error Handler](screenshots/error-handler.png)
 
+### Retell AI Workflow
+
+![Retell AI Workflow](screenshots/retell-ai-workflow.png)
+
 ### Lead Logged in Google Sheets
 
 ![Google Sheets Lead](screenshots/google-sheets.png)
